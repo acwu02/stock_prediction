@@ -8,8 +8,10 @@ from torch.utils.data import Dataset, DataLoader
 
 # Wrapper for torch Dataset class
 class StockDataset(Dataset):
-    def __init__(self, df):
+    def __init__(self, df, offset):
         self.df = df
+        # offset prevents automatic rounding down when converting to torch.long
+        self.offset = offset
         self.features = self.df.iloc[:, :-1]
         self.labels = self.df.iloc[:, -1]
         # We calculate the mean of the dataset to normalize the data points over.
@@ -23,10 +25,10 @@ class StockDataset(Dataset):
     def __getitem__(self, idx):
         features = self.normalize(self.features.iloc[idx].values)
         labels = self.normalize(self.labels.iloc[idx])
-        return features, labels
+        return torch.tensor(features), torch.tensor(labels)
 
     def normalize(self, tensor):
-        return (tensor - self.mean) / self.mean
+        return ((tensor - self.mean) / self.mean) + self.offset
 
 # Example usage
 if __name__ == "__main__":
